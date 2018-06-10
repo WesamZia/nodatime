@@ -25,6 +25,13 @@ namespace NodaTime.Text
         internal const string BeforeMinValueText = "StartOfTime";
         internal const string AfterMaxValueText = "EndOfTime";
 
+        private readonly LocalDateTime localTemplateValue;
+
+        internal InstantPatternParser(Instant templateValue)
+        {
+            localTemplateValue = templateValue.InUtc().LocalDateTime;
+        }
+
         public IPattern<Instant> ParsePattern([NotNull] string patternText, NodaFormatInfo formatInfo)
         {
             Preconditions.CheckNotNull(patternText, nameof(patternText));
@@ -44,7 +51,9 @@ namespace NodaTime.Text
                 }
             }
 
-            IPattern<LocalDateTime> localResult = formatInfo.LocalDateTimePatternParser.ParsePattern(patternText);
+            IPattern<LocalDateTime> localResult = localTemplateValue == LocalDateTimePattern.DefaultTemplateValue
+                ? formatInfo.LocalDateTimePatternParser.ParsePattern(patternText)
+                : new LocalDateTimePatternParser(localTemplateValue).ParsePattern(patternText, formatInfo);
             return new LocalDateTimePatternAdapter(localResult);
         }
 
